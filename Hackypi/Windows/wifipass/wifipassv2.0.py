@@ -14,7 +14,7 @@ from keyboard_layout_win_uk import KeyboardLayout
 BORDER = 12
 FONTSCALE = 3
 BACKGROUND_COLOR = 0x000000  # Black
-FOREGROUND_COLOR = 0xFFFFFF  # White for text color
+FOREGROUND_COLOR = 0x000000  # Black
 TEXT_COLOR = 0xFFFFFF  # White for text color
 
 # Release any resources currently in use for the displays
@@ -78,7 +78,7 @@ def save_file_in_current_directory(file_name, command, keyboard_layout):
 
 # Initial screen setup
 inner_rectangle()
-print_onTFT("Welcome to", 60, 40)
+print_onTFT("Wifi", 50, 40)
 print_onTFT("HackyPi", 60, 80)
 time.sleep(3)
 
