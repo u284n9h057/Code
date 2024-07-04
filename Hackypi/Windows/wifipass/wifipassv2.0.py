@@ -78,8 +78,8 @@ def save_file_in_current_directory(file_name, command, keyboard_layout):
 
 # Initial screen setup
 inner_rectangle()
-print_onTFT("Wifi", 50, 40)
-print_onTFT("HackyPi", 60, 80)
+print_onTFT("HackyPi", 60, 40)
+print_onTFT("WIFI v2.0", 30, 80)
 time.sleep(3)
 
 try:
