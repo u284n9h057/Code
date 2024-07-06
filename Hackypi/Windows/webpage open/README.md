@@ -1,0 +1,1 @@
+basic open a webpage script

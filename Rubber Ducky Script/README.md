@@ -1,1 +1,3 @@
 These Ducky scripts are tailored for the DuckyPi.py script that runs on the Hackypi.  Change the name to 'duckyscript.txt' and put on the HackyPi drive in the root folder.
+Not many yet but I will be adding to it all the time as I test the scripts or write new ones.
+Many of these scripts will also have a HackyPi version written in circuitpython in my HackyPi folder, normaly if it has a version number on the end of the filename.  I think they run a bit faster in circuitpython than running them as a Ducky script.

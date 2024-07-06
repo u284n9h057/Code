@@ -1,0 +1,2 @@
+This is a HackyPi script that will load a Ducky script from the HackyPi and run it just like a Rubber Ducky.
+Check the code of the Ducky script you use to make sure it works. Sometimes there are errors in the Ducky scripts you find online.  Or you can use the tailored Ducky scripts I have made.
