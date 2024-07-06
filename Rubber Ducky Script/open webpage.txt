@@ -1,0 +1,8 @@
+REM Opens a webpage
+REM Works with Windows 10+
+REM by u284n9h057
+DELAY 300
+GUI r
+DELAY 1000
+STRING firefox https://google.com
+ENTER
