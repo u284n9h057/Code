@@ -76,9 +76,10 @@ print_onTFT("Welcome to", 30, 40)
 print_onTFT("DuckyPi", 60, 80)
 time.sleep(3)
 
-time.sleep(1)  # Sleep for a bit to avoid a race condition on some systems
+# Sleep for a bit to avoid a race condition on some systems
+time.sleep(1)
 keyboard = Keyboard(usb_hid.devices)
-keyboard_layout = KeyboardLayout(keyboard)  # We're in the UK :)
+keyboard_layout = KeyboardLayout(keyboard)
 
 duck = adafruit_ducky.Ducky('duckyscript.txt', keyboard, keyboard_layout)
 
