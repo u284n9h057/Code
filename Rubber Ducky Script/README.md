@@ -1,0 +1,1 @@
+These Ducky scripts are tailored for the DuckyPi.py script that runs on the Hackypi.  Change the name to 'duckyscript.txt' and put on the HackyPi drive in the root folder.
