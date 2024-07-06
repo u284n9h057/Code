@@ -1,0 +1,1 @@
+Accesses the inbuilt SD card and lists the files.  Uses the shell monitor in thonny, but should work in any python editor
