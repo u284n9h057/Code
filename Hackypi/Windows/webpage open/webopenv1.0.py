@@ -70,8 +70,8 @@ def type_and_enter(command, keyboard_layout, delay=0.1):
     time.sleep(delay)
     
 inner_rectangle()
-print_onTFT("HackyPi", 60, 40)
-print_onTFT("webopenv1.0", 60, 80)
+print_onTFT("HackyPi", 50, 40)
+print_onTFT("webopenv1.0", 20, 80)
 time.sleep(2)
 
 try:
@@ -95,6 +95,6 @@ except Exception as ex:
     raise ex
 
 inner_rectangle()
-print_onTFT("Execution", 30, 40)
-print_onTFT("Complete", 60, 80)
+print_onTFT("Execution", 40, 40)
+print_onTFT("Complete", 50, 80)
 time.sleep(3)

