@@ -1,1 +1,1 @@
-Netinfo v4.0 runs netstat and ipconfig, saves the output to a file on the hackpi sd
+Netinfo v4.0 runs netstat and ipconfig, saves the output to a file on the hackypi sd
